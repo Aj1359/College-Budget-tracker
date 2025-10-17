@@ -1,15 +1,35 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { mockCoSAData } from "@/lib/mockData";
 import { BudgetOverview } from "@/components/BudgetOverview";
 import { CouncilCard } from "@/components/CouncilCard";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { useNavigate } from "react-router-dom";
-import { Building2, Users, CalendarDays, TrendingUp } from "lucide-react";
+import { Building2, Users, CalendarDays, TrendingUp, LogOut } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { user, loading, roles, signOut } = useAuth();
   const [data] = useState(mockCoSAData);
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate("/auth");
+    }
+  }, [user, loading, navigate]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-xl text-foreground">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
 
   const quickStats = [
     {
@@ -45,16 +65,28 @@ const Dashboard = () => {
         <div className="container mx-auto px-6 py-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-4xl font-bold mb-2">CoSA Budget Tracker</h1>
-              <p className="text-white/80">Council of Student Affairs • IIT Bhilai</p>
+              <h1 className="text-4xl font-bold mb-2">
+                Council of Student Affairs
+              </h1>
+              <p className="text-xl text-white/80">Budget Dashboard 2025-26</p>
             </div>
-            <Button
-              variant="secondary"
-              size="lg"
-              className="bg-white text-primary hover:bg-white/90"
-            >
-              Academic Year 2025-26
-            </Button>
+            <div className="flex items-center gap-4">
+              <div className="text-right">
+                <p className="text-sm text-white/60">Role</p>
+                <p className="text-lg font-semibold">
+                  {roles.includes("super_admin") ? "Super Admin" : 
+                   roles.includes("admin") ? "Admin" : "Viewer"}
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                onClick={signOut}
+                className="text-white border-white hover:bg-white/10"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Sign Out
+              </Button>
+            </div>
           </div>
         </div>
       </header>
