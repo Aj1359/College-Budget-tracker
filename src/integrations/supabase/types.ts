@@ -14,16 +14,156 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      budget_allocations: {
+        Row: {
+          entity_id: string
+          entity_type: string
+          equipment_allocated: number | null
+          external_funding: number | null
+          fund_booking: number | null
+          funds_allocated: number | null
+          id: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          entity_id: string
+          entity_type: string
+          equipment_allocated?: number | null
+          external_funding?: number | null
+          fund_booking?: number | null
+          funds_allocated?: number | null
+          id?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          entity_id?: string
+          entity_type?: string
+          equipment_allocated?: number | null
+          external_funding?: number | null
+          fund_booking?: number | null
+          funds_allocated?: number | null
+          id?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      expenses: {
+        Row: {
+          amount: number
+          approval_date: string | null
+          approved_by: string | null
+          bill_url: string | null
+          club_id: string
+          created_at: string | null
+          date: string
+          description: string | null
+          id: string
+          invoice_amount: number | null
+          invoice_date: string | null
+          purpose: string
+          remarks: string | null
+          requisition_url: string | null
+          status: string | null
+          submitted_by: string
+          updated_at: string | null
+        }
+        Insert: {
+          amount: number
+          approval_date?: string | null
+          approved_by?: string | null
+          bill_url?: string | null
+          club_id: string
+          created_at?: string | null
+          date: string
+          description?: string | null
+          id?: string
+          invoice_amount?: number | null
+          invoice_date?: string | null
+          purpose: string
+          remarks?: string | null
+          requisition_url?: string | null
+          status?: string | null
+          submitted_by: string
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number
+          approval_date?: string | null
+          approved_by?: string | null
+          bill_url?: string | null
+          club_id?: string
+          created_at?: string | null
+          date?: string
+          description?: string | null
+          id?: string
+          invoice_amount?: number | null
+          invoice_date?: string | null
+          purpose?: string
+          remarks?: string | null
+          requisition_url?: string | null
+          status?: string | null
+          submitted_by?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          full_name: string | null
+          id: string
+        }
+        Insert: {
+          created_at?: string | null
+          full_name?: string | null
+          id: string
+        }
+        Update: {
+          created_at?: string | null
+          full_name?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "viewer" | "admin" | "super_admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +290,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["viewer", "admin", "super_admin"],
+    },
   },
 } as const
