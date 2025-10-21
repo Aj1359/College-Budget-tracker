@@ -1,34 +1,32 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { mockCoSAData } from "@/lib/mockData";
 import { BudgetOverview } from "@/components/BudgetOverview";
 import { CouncilCard } from "@/components/CouncilCard";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Building2, Users, CalendarDays, TrendingUp, LogOut } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
+import { Building2, Users, CalendarDays, TrendingUp, DollarSign } from "lucide-react";
+import { SourcesOfFund } from "@/components/SourcesOfFund";
+import { DetailedExpenditure } from "@/components/DetailedExpenditure";
+import { FundBookingView } from "@/components/FundBookingView";
+
+type View = 'dashboard' | 'sources' | 'expenditure' | 'bookings';
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { user, loading, roles, signOut } = useAuth();
   const [data] = useState(mockCoSAData);
+  const [currentView, setCurrentView] = useState<View>('dashboard');
 
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate("/auth");
-    }
-  }, [user, loading, navigate]);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-xl text-foreground">Loading...</div>
-      </div>
-    );
+  if (currentView === 'sources') {
+    return <SourcesOfFund onBack={() => setCurrentView('dashboard')} />;
   }
 
-  if (!user) {
-    return null;
+  if (currentView === 'expenditure') {
+    return <DetailedExpenditure onBack={() => setCurrentView('dashboard')} />;
+  }
+
+  if (currentView === 'bookings') {
+    return <FundBookingView onBack={() => setCurrentView('dashboard')} />;
   }
 
   const quickStats = [
@@ -63,31 +61,13 @@ const Dashboard = () => {
       {/* Header */}
       <header className="bg-gradient-primary text-white shadow-elevation-high">
         <div className="container mx-auto px-6 py-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl font-bold mb-2">
-                Council of Student Affairs
-              </h1>
-              <p className="text-xl text-white/80">Budget Dashboard 2025-26</p>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="text-right">
-                <p className="text-sm text-white/60">Role</p>
-                <p className="text-lg font-semibold">
-                  {roles.includes("super_admin") ? "Super Admin" : 
-                   roles.includes("admin") ? "Admin" : "Viewer"}
-                </p>
-              </div>
-              <Button
-                variant="outline"
-                onClick={signOut}
-                className="text-white border-white hover:bg-white/10"
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                Sign Out
-              </Button>
-            </div>
+          <div className="flex items-center gap-4 mb-4">
+            <DollarSign className="w-12 h-12" />
+            <h1 className="text-4xl font-bold">
+              College Budget Tracker
+            </h1>
           </div>
+          <p className="text-xl text-white/80">Budget Dashboard 2025-26</p>
         </div>
       </header>
 
@@ -112,9 +92,46 @@ const Dashboard = () => {
           })}
         </div>
 
-        {/* Budget Overview */}
+        {/* Budget Overview with Clickable Rows */}
         <div className="animate-slide-up">
-          <BudgetOverview budget={data.totalBudget} title="CoSA Total Budget 2025-26" />
+          <Card className="p-6 bg-card border-border/50">
+            <h2 className="text-2xl font-bold text-foreground mb-6">CoSA Total Budget 2025-26</h2>
+            <div className="space-y-4">
+              <div 
+                className="p-4 bg-muted rounded-lg hover:bg-muted/80 cursor-pointer transition-colors"
+                onClick={() => setCurrentView('sources')}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold text-foreground">Sources of Fund</span>
+                  <span className="text-primary">₹{data.totalBudget.total.fundsAllocated.toLocaleString('en-IN')}</span>
+                </div>
+              </div>
+              <div 
+                className="p-4 bg-muted rounded-lg hover:bg-muted/80 cursor-pointer transition-colors"
+                onClick={() => setCurrentView('expenditure')}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold text-foreground">Expenditure</span>
+                  <span className="text-destructive">₹{data.totalBudget.total.expenditure.toLocaleString('en-IN')}</span>
+                </div>
+              </div>
+              <div 
+                className="p-4 bg-muted rounded-lg hover:bg-muted/80 cursor-pointer transition-colors"
+                onClick={() => setCurrentView('bookings')}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold text-foreground">Fund Booking</span>
+                  <span className="text-warning">₹{data.totalBudget.total.fundBooking.toLocaleString('en-IN')}</span>
+                </div>
+              </div>
+              <div className="p-4 bg-accent/10 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <span className="font-semibold text-foreground">Remaining</span>
+                  <span className="text-accent">₹{(data.totalBudget.total.fundsAllocated - data.totalBudget.total.expenditure - data.totalBudget.total.fundBooking).toLocaleString('en-IN')}</span>
+                </div>
+              </div>
+            </div>
+          </Card>
         </div>
 
         {/* Councils Grid */}
@@ -139,70 +156,33 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Independent Sections */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Independent Clubs */}
-          <Card className="p-6 bg-card border-border/50">
-            <h3 className="text-xl font-bold text-foreground mb-4">Independent Clubs</h3>
-            <div className="space-y-3">
-              {data.independentClubs.map((club) => {
-                const allocated = club.budget.total.fundsAllocated;
-                const spent = club.budget.total.expenditure;
-                const percentUsed = allocated > 0 ? ((spent / allocated) * 100).toFixed(0) : 0;
-                
-                return (
-                  <div
-                    key={club.id}
-                    className="flex items-center justify-between p-4 bg-muted rounded-lg hover:bg-muted/80 transition-colors cursor-pointer"
-                    onClick={() => navigate(`/club/${club.id}`)}
-                  >
-                    <div className="flex-1">
-                      <p className="font-semibold text-foreground">{club.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        ₹{allocated.toLocaleString('en-IN')}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-semibold text-primary">{percentUsed}%</p>
-                      <p className="text-xs text-muted-foreground">used</p>
-                    </div>
+        {/* Independent Clubs */}
+        <Card className="p-6 bg-card border-border/50">
+          <h3 className="text-xl font-bold text-foreground mb-4">Independent Clubs/Societies</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {data.independentClubs.map((club) => {
+              const allocated = club.budget.total.fundsAllocated;
+              const spent = club.budget.total.expenditure;
+              const percentUsed = allocated > 0 ? ((spent / allocated) * 100).toFixed(0) : 0;
+              
+              return (
+                <div
+                  key={club.id}
+                  className="p-4 bg-muted rounded-lg hover:bg-muted/80 transition-colors cursor-pointer"
+                  onClick={() => navigate(`/club/${club.id}`)}
+                >
+                  <p className="font-semibold text-foreground">{club.name}</p>
+                  <div className="flex items-center justify-between mt-2">
+                    <span className="text-sm text-muted-foreground">
+                      ₹{allocated.toLocaleString('en-IN')}
+                    </span>
+                    <span className="text-primary font-semibold">{percentUsed}%</span>
                   </div>
-                );
-              })}
-            </div>
-          </Card>
-
-          {/* Meraz Section */}
-          <Card className="p-6 bg-card border-border/50">
-            <h3 className="text-xl font-bold text-foreground mb-4">Meraz</h3>
-            <div className="space-y-3">
-              {data.meraz.sections.map((section) => {
-                const allocated = section.budget.total.fundsAllocated;
-                const spent = section.budget.total.expenditure;
-                const percentUsed = allocated > 0 ? ((spent / allocated) * 100).toFixed(0) : 0;
-                
-                return (
-                  <div
-                    key={section.id}
-                    className="flex items-center justify-between p-4 bg-muted rounded-lg hover:bg-muted/80 transition-colors cursor-pointer"
-                    onClick={() => navigate(`/meraz/${section.id}`)}
-                  >
-                    <div className="flex-1">
-                      <p className="font-semibold text-foreground">{section.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        ₹{allocated.toLocaleString('en-IN')}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-semibold text-secondary">{percentUsed}%</p>
-                      <p className="text-xs text-muted-foreground">used</p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </Card>
-        </div>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
       </div>
     </div>
   );

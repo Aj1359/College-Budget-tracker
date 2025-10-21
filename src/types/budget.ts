@@ -31,16 +31,44 @@ export interface Council {
 export interface Expense {
   id: string;
   clubId: string;
+  councilName?: string;
+  expenseType: 'reimbursement' | 'party_payment';
   date: string;
-  purpose: string;
+  activityType: string;
+  itemType: 'consumable' | 'non_consumable';
   amount: number;
-  description: string;
-  requisitionUrl?: string;
-  invoiceDate?: string;
-  invoiceAmount?: number;
+  paidBy?: string;
+  paidTo?: string;
   billUrl?: string;
-  status: 'pending' | 'approved' | 'rejected';
+  requisitionUrl?: string;
+  description?: string;
+  accountName?: string;
+  accountNumber?: string;
+  branch?: string;
+  ifscCode?: string;
+  status: 'pending_approval' | 'approved' | 'awaiting_bill' | 'pending_payment' | 'paid' | 'rejected';
   remarks?: string;
+  approvedAt?: string;
+  paidAt?: string;
+}
+
+export interface SourceOfFund {
+  id: string;
+  month: string;
+  feesCollected: number;
+  sponsorship: number;
+  others: number;
+}
+
+export interface ExternalFunding {
+  id: string;
+  clubId: string;
+  councilName?: string;
+  source: string;
+  amount: number;
+  date: string;
+  description?: string;
+  proofUrl?: string;
 }
 
 export interface CoSAData {

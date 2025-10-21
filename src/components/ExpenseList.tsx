@@ -27,6 +27,12 @@ export const ExpenseList = ({ expenses }: ExpenseListProps) => {
         return "Approved";
       case "rejected":
         return "Rejected";
+      case "paid":
+        return "Paid";
+      case "awaiting_bill":
+        return "Awaiting Bill";
+      case "pending_payment":
+        return "Pending Payment";
       default:
         return "Pending Approval";
     }
@@ -45,12 +51,19 @@ export const ExpenseList = ({ expenses }: ExpenseListProps) => {
           <div className="flex items-start justify-between mb-4">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
-                <h3 className="text-lg font-semibold text-foreground">{expense.purpose}</h3>
+                <h3 className="text-lg font-semibold text-foreground">{expense.activityType}</h3>
                 <Badge className={cn("border", getStatusColor(expense.status))}>
                   {getStatusText(expense.status)}
                 </Badge>
+                <Badge variant={expense.expenseType === 'reimbursement' ? 'default' : 'secondary'}>
+                  {expense.expenseType}
+                </Badge>
               </div>
-              <p className="text-sm text-muted-foreground">{expense.description}</p>
+              <p className="text-sm text-muted-foreground">{expense.description || 'No description'}</p>
+              <div className="flex items-center gap-4 mt-2">
+                <span className="text-xs text-muted-foreground">Item: {expense.itemType}</span>
+                {expense.paidBy && <span className="text-xs text-muted-foreground">Paid by: {expense.paidBy}</span>}
+              </div>
             </div>
             <div className="text-right">
               <p className="text-2xl font-bold text-primary">
@@ -72,29 +85,20 @@ export const ExpenseList = ({ expenses }: ExpenseListProps) => {
                 </a>
               </Button>
             )}
+            {expense.billUrl && (
+              <Button variant="ghost" size="sm" asChild>
+                <a href={expense.billUrl} target="_blank" rel="noopener noreferrer">
+                  <FileText className="w-4 h-4 mr-2" />
+                  View Bill
+                </a>
+              </Button>
+            )}
           </div>
 
           {expense.remarks && (
             <div className="mt-4 p-3 bg-muted rounded-lg">
               <p className="text-sm font-medium text-foreground mb-1">Remarks:</p>
               <p className="text-sm text-muted-foreground">{expense.remarks}</p>
-            </div>
-          )}
-
-          {expense.status === "approved" && expense.billUrl && (
-            <div className="mt-4 flex items-center gap-4 p-3 bg-accent/10 rounded-lg">
-              <div className="flex-1">
-                <p className="text-sm font-medium text-foreground">Invoice Details</p>
-                <p className="text-xs text-muted-foreground">
-                  Date: {expense.invoiceDate} • Amount: ₹{expense.invoiceAmount?.toLocaleString('en-IN')}
-                </p>
-              </div>
-              <Button variant="outline" size="sm" asChild>
-                <a href={expense.billUrl} target="_blank" rel="noopener noreferrer">
-                  <FileText className="w-4 h-4 mr-2" />
-                  View Bill
-                </a>
-              </Button>
             </div>
           )}
         </Card>

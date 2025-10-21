@@ -64,9 +64,13 @@ const sportsClubs: Club[] = [
   { id: 'sports-misc', name: 'Misc', budget: createEmptyBudget(35000) },
 ];
 
-// Academics Council (placeholder)
-const academicsClubs: Club[] = [
-  { id: 'academics-main', name: 'Academic Affairs', budget: createEmptyBudget(100000) },
+// Meraz Sections
+const merazSections: Club[] = [
+  { id: 'decor', name: 'Decor', budget: createEmptyBudget(150000) },
+  { id: 'outreach', name: 'Outreach', budget: createEmptyBudget(80000) },
+  { id: 'flashmob', name: 'Flashmob', budget: createEmptyBudget(50000) },
+  { id: 'pronites', name: 'Pronites', budget: createEmptyBudget(300000) },
+  { id: 'meraz-misc', name: 'Misc', budget: createEmptyBudget(70000) },
 ];
 
 // Calculate council totals
@@ -120,11 +124,11 @@ const councils: Council[] = [
     clubs: sportsClubs,
   },
   {
-    id: 'academics',
-    name: 'Academics Council',
-    type: 'academics',
-    budget: calculateCouncilTotal(academicsClubs),
-    clubs: academicsClubs,
+    id: 'meraz',
+    name: 'Meraz',
+    type: 'cultural',
+    budget: calculateCouncilTotal(merazSections),
+    clubs: merazSections,
   },
 ];
 
@@ -134,21 +138,13 @@ const independentClubs: Club[] = [
   { id: 'nirvana', name: 'Nirvana', budget: createEmptyBudget(70000) },
 ];
 
-const merazSections: Club[] = [
-  { id: 'decor', name: 'Decor', budget: createEmptyBudget(150000) },
-  { id: 'outreach', name: 'Outreach', budget: createEmptyBudget(80000) },
-  { id: 'flashmob', name: 'Flashmob', budget: createEmptyBudget(50000) },
-  { id: 'pronites', name: 'Pronites', budget: createEmptyBudget(300000) },
-  { id: 'meraz-misc', name: 'Misc', budget: createEmptyBudget(70000) },
-];
-
 export const mockCoSAData: CoSAData = {
   totalBudget: createEmptyBudget(5000000),
   councils,
   independentClubs,
   meraz: {
-    budget: calculateCouncilTotal(merazSections),
-    sections: merazSections,
+    budget: calculateCouncilTotal([]),
+    sections: [],
   },
   misc: createEmptyBudget(100000),
 };

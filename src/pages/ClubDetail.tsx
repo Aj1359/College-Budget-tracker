@@ -5,33 +5,27 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ArrowLeft, Plus } from "lucide-react";
 import { BudgetTable } from "@/components/BudgetTable";
-import { ExpenseForm } from "@/components/ExpenseForm";
 import { ExpenseList } from "@/components/ExpenseList";
+import { NewExpenseForm } from "@/components/NewExpenseForm";
+import { ExternalFundingForm } from "@/components/ExternalFundingForm";
 import { Expense } from "@/types/budget";
-import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 const ClubDetail = () => {
   const { clubId } = useParams();
   const navigate = useNavigate();
-  const { user, loading: authLoading, hasRole } = useAuth();
   const { toast } = useToast();
   const [showExpenseForm, setShowExpenseForm] = useState(false);
+  const [showFundingForm, setShowFundingForm] = useState(false);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loadingExpenses, setLoadingExpenses] = useState(true);
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      navigate("/auth");
-    }
-  }, [user, authLoading, navigate]);
-
-  useEffect(() => {
-    if (user && clubId) {
+    if (clubId) {
       fetchExpenses();
     }
-  }, [user, clubId]);
+  }, [clubId]);
 
   const fetchExpenses = async () => {
     try {
@@ -47,15 +41,19 @@ const ClubDetail = () => {
       setExpenses(data.map(exp => ({
         id: exp.id,
         clubId: exp.club_id,
+        councilName: exp.council_name || "",
+        expenseType: exp.expense_type as 'reimbursement' | 'party_payment',
         date: exp.date,
-        purpose: exp.purpose,
+        activityType: exp.activity_type,
+        itemType: exp.item_type as 'consumable' | 'non_consumable',
         amount: Number(exp.amount),
+        paidBy: exp.paid_by || "",
+        paidTo: exp.paid_to || "",
+        billUrl: exp.bill_url || "",
+        requisitionUrl: exp.requisition_url || "",
         description: exp.description || "",
-        requisitionUrl: exp.requisition_url || undefined,
-        invoiceDate: exp.invoice_date || undefined,
-        invoiceAmount: exp.invoice_amount ? Number(exp.invoice_amount) : undefined,
-        billUrl: exp.bill_url || undefined,
-        status: exp.status as "pending" | "approved" | "rejected",
+        status: exp.status as any,
+        remarks: exp.remarks || "",
       })));
     } catch (error: any) {
       toast({
@@ -68,11 +66,9 @@ const ClubDetail = () => {
     }
   };
 
-  // Find club in all possible locations
   let club = null;
   let parentName = "";
 
-  // Check councils
   for (const council of mockCoSAData.councils) {
     const foundClub = council.clubs.find((c) => c.id === clubId);
     if (foundClub) {
@@ -82,16 +78,9 @@ const ClubDetail = () => {
     }
   }
 
-  // Check independent clubs
   if (!club) {
     club = mockCoSAData.independentClubs.find((c) => c.id === clubId);
     if (club) parentName = "Independent Club";
-  }
-
-  // Check Meraz sections
-  if (!club) {
-    club = mockCoSAData.meraz.sections.find((c) => c.id === clubId);
-    if (club) parentName = "Meraz";
   }
 
   if (!club) {
@@ -105,19 +94,20 @@ const ClubDetail = () => {
     );
   }
 
-  const handleAddExpense = async (expense: Omit<Expense, "id" | "clubId" | "status">) => {
-    if (!user) return;
-
+  const handleAddExpense = async (expenseData: any) => {
     try {
       const { error } = await supabase.from("expenses").insert({
         club_id: clubId!,
-        submitted_by: user.id,
-        date: expense.date,
-        purpose: expense.purpose,
-        amount: expense.amount,
-        description: expense.description,
-        requisition_url: expense.requisitionUrl,
-        status: "pending",
+        council_name: parentName,
+        expense_type: expenseData.expenseType,
+        date: expenseData.date,
+        activity_type: expenseData.activityType,
+        item_type: expenseData.itemType,
+        amount: Number(expenseData.amount),
+        paid_by: expenseData.paidBy,
+        paid_to: expenseData.paidTo,
+        description: expenseData.description,
+        status: 'pending_approval',
       });
 
       if (error) throw error;
@@ -138,7 +128,35 @@ const ClubDetail = () => {
     }
   };
 
-  if (authLoading || loadingExpenses) {
+  const handleAddFunding = async (fundingData: any) => {
+    try {
+      const { error } = await supabase.from("external_funding").insert({
+        club_id: clubId!,
+        council_name: parentName,
+        source: fundingData.source,
+        amount: Number(fundingData.amount),
+        date: fundingData.date,
+        description: fundingData.description,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "External funding added successfully",
+      });
+
+      setShowFundingForm(false);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add funding",
+        variant: "destructive",
+      });
+    }
+  };
+
+  if (loadingExpenses) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-xl text-foreground">Loading...</div>
@@ -146,13 +164,8 @@ const ClubDetail = () => {
     );
   }
 
-  if (!user) {
-    return null;
-  }
-
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="bg-gradient-primary text-white shadow-elevation-high">
         <div className="container mx-auto px-6 py-8">
           <Button
@@ -168,7 +181,7 @@ const ClubDetail = () => {
               <h1 className="text-4xl font-bold">{club.name}</h1>
               <p className="text-white/80 mt-2">{parentName}</p>
             </div>
-            {(hasRole("admin") || hasRole("super_admin")) && (
+            <div className="flex gap-2">
               <Button
                 onClick={() => setShowExpenseForm(true)}
                 size="lg"
@@ -177,31 +190,33 @@ const ClubDetail = () => {
                 <Plus className="w-5 h-5 mr-2" />
                 Add Expense
               </Button>
-            )}
+              <Button
+                onClick={() => setShowFundingForm(true)}
+                size="lg"
+                variant="outline"
+                className="text-white border-white hover:bg-white/10"
+              >
+                <Plus className="w-5 h-5 mr-2" />
+                Add External Funding
+              </Button>
+            </div>
           </div>
         </div>
       </header>
 
       <div className="container mx-auto px-6 py-8 space-y-8">
-        {/* Budget Overview */}
         <Card className="p-6 bg-card border-border/50 animate-fade-in">
           <h2 className="text-2xl font-bold text-foreground mb-6">Budget Overview</h2>
           <BudgetTable budget={club.budget} />
         </Card>
 
-        {/* Expenses Section */}
         <div className="space-y-4 animate-slide-up">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold text-foreground">Expenses</h2>
-            {(hasRole("admin") || hasRole("super_admin")) && (
-              <Button
-                onClick={() => setShowExpenseForm(true)}
-                variant="outline"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Expense
-              </Button>
-            )}
+            <Button onClick={() => setShowExpenseForm(true)} variant="outline">
+              <Plus className="w-4 h-4 mr-2" />
+              Add Expense
+            </Button>
           </div>
 
           {expenses.length > 0 ? (
@@ -218,11 +233,20 @@ const ClubDetail = () => {
         </div>
       </div>
 
-      {/* Expense Form Dialog */}
-      <ExpenseForm
+      <NewExpenseForm
         open={showExpenseForm}
         onClose={() => setShowExpenseForm(false)}
         onSubmit={handleAddExpense}
+        clubId={clubId!}
+        councilName={parentName}
+      />
+      
+      <ExternalFundingForm
+        open={showFundingForm}
+        onClose={() => setShowFundingForm(false)}
+        onSubmit={handleAddFunding}
+        clubId={clubId!}
+        councilName={parentName}
       />
     </div>
   );

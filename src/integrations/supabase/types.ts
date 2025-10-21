@@ -52,61 +52,145 @@ export type Database = {
       }
       expenses: {
         Row: {
+          account_name: string | null
+          account_number: string | null
+          activity_type: string
           amount: number
-          approval_date: string | null
-          approved_by: string | null
+          approved_at: string | null
           bill_url: string | null
+          branch: string | null
           club_id: string
-          created_at: string | null
+          council_name: string | null
+          created_at: string
+          date: string
+          description: string | null
+          expense_type: Database["public"]["Enums"]["expense_type"]
+          id: string
+          ifsc_code: string | null
+          item_type: Database["public"]["Enums"]["item_type"]
+          paid_at: string | null
+          paid_by: string | null
+          paid_to: string | null
+          remarks: string | null
+          requisition_url: string | null
+          status: Database["public"]["Enums"]["expense_status"]
+          updated_at: string
+        }
+        Insert: {
+          account_name?: string | null
+          account_number?: string | null
+          activity_type: string
+          amount: number
+          approved_at?: string | null
+          bill_url?: string | null
+          branch?: string | null
+          club_id: string
+          council_name?: string | null
+          created_at?: string
+          date: string
+          description?: string | null
+          expense_type: Database["public"]["Enums"]["expense_type"]
+          id?: string
+          ifsc_code?: string | null
+          item_type: Database["public"]["Enums"]["item_type"]
+          paid_at?: string | null
+          paid_by?: string | null
+          paid_to?: string | null
+          remarks?: string | null
+          requisition_url?: string | null
+          status?: Database["public"]["Enums"]["expense_status"]
+          updated_at?: string
+        }
+        Update: {
+          account_name?: string | null
+          account_number?: string | null
+          activity_type?: string
+          amount?: number
+          approved_at?: string | null
+          bill_url?: string | null
+          branch?: string | null
+          club_id?: string
+          council_name?: string | null
+          created_at?: string
+          date?: string
+          description?: string | null
+          expense_type?: Database["public"]["Enums"]["expense_type"]
+          id?: string
+          ifsc_code?: string | null
+          item_type?: Database["public"]["Enums"]["item_type"]
+          paid_at?: string | null
+          paid_by?: string | null
+          paid_to?: string | null
+          remarks?: string | null
+          requisition_url?: string | null
+          status?: Database["public"]["Enums"]["expense_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      external_funding: {
+        Row: {
+          amount: number
+          club_id: string
+          council_name: string | null
+          created_at: string
           date: string
           description: string | null
           id: string
-          invoice_amount: number | null
-          invoice_date: string | null
-          purpose: string
-          remarks: string | null
-          requisition_url: string | null
-          status: string | null
-          submitted_by: string
-          updated_at: string | null
+          proof_url: string | null
+          source: string
+          updated_at: string
         }
         Insert: {
           amount: number
-          approval_date?: string | null
-          approved_by?: string | null
-          bill_url?: string | null
           club_id: string
-          created_at?: string | null
+          council_name?: string | null
+          created_at?: string
           date: string
           description?: string | null
           id?: string
-          invoice_amount?: number | null
-          invoice_date?: string | null
-          purpose: string
-          remarks?: string | null
-          requisition_url?: string | null
-          status?: string | null
-          submitted_by: string
-          updated_at?: string | null
+          proof_url?: string | null
+          source: string
+          updated_at?: string
         }
         Update: {
           amount?: number
-          approval_date?: string | null
-          approved_by?: string | null
-          bill_url?: string | null
           club_id?: string
-          created_at?: string | null
+          council_name?: string | null
+          created_at?: string
           date?: string
           description?: string | null
           id?: string
-          invoice_amount?: number | null
-          invoice_date?: string | null
-          purpose?: string
-          remarks?: string | null
-          requisition_url?: string | null
-          status?: string | null
-          submitted_by?: string
-          updated_at?: string | null
+          proof_url?: string | null
+          source?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      fund_asked: {
+        Row: {
+          created_at: string
+          entity_id: string
+          entity_type: string
+          id: string
+          sheet_url: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          id?: string
+          sheet_url: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          sheet_url?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -125,6 +209,36 @@ export type Database = {
           created_at?: string | null
           full_name?: string | null
           id?: string
+        }
+        Relationships: []
+      }
+      sources_of_fund: {
+        Row: {
+          created_at: string
+          fees_collected: number
+          id: string
+          month: string
+          others: number
+          sponsorship: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          fees_collected?: number
+          id?: string
+          month: string
+          others?: number
+          sponsorship?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          fees_collected?: number
+          id?: string
+          month?: string
+          others?: number
+          sponsorship?: number
+          updated_at?: string
         }
         Relationships: []
       }
@@ -164,6 +278,15 @@ export type Database = {
     }
     Enums: {
       app_role: "viewer" | "admin" | "super_admin"
+      expense_status:
+        | "pending_approval"
+        | "approved"
+        | "awaiting_bill"
+        | "pending_payment"
+        | "paid"
+        | "rejected"
+      expense_type: "reimbursement" | "party_payment"
+      item_type: "consumable" | "non_consumable"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -292,6 +415,16 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["viewer", "admin", "super_admin"],
+      expense_status: [
+        "pending_approval",
+        "approved",
+        "awaiting_bill",
+        "pending_payment",
+        "paid",
+        "rejected",
+      ],
+      expense_type: ["reimbursement", "party_payment"],
+      item_type: ["consumable", "non_consumable"],
     },
   },
 } as const
